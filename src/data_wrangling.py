@@ -1,5 +1,18 @@
 import pandas as pd
 import os, sys
+import argparse
+
+def parse_args():
+    """
+    Parse the arguments.
+    :return: argparse.Namespace
+    """
+    parser = argparse.ArgumentParser(description='Data Wrangling')
+    parser.add_argument('dir_path', type=str, help='Path to the directory with the data.')
+    parser.add_argument('-enc', '--encoding', type=str, default='latin1', help='Encoding of the files.')
+    parser.add_argument('-sep', '--separator', type=str, default=';', help='Separator of the files.')
+    parser.add_argument('-out', '--output', type=str, default='data.csv', help='Output file.')
+    return parser.parse_args()
 
 
 def read_data(dir_path, encoding: str ='latin1', separator: str = ';') -> pd.DataFrame:
@@ -8,24 +21,34 @@ def read_data(dir_path, encoding: str ='latin1', separator: str = ';') -> pd.Dat
     :param dir_path: str
     :return: DataFrame
     """
-    assert os.path.exists(dir_path), f"Directory {dir_path} not found."
     try:
+        # Check if the directory exists and if there are csv files
+        assert os.path.exists(dir_path), f"Directory {dir_path} not found."
+
+        # Check if there are csv files in the directory and list them
         file_list = os.listdir(dir_path)
+        file_list = [file for file in file_list if file.endswith('.csv')]
+        assert len(file_list) > 0, f"No csv files found in {dir_path}."
+
+        # Read the csv files
         data = pd.DataFrame()
         for file in file_list:
-            if file.endswith('.csv'):
-                data = pd.concat([data, pd.read_csv(os.path.join(dir_path, file), encoding=encoding, sep=separator, skiprows=1)])
+            data = pd.concat([data, pd.read_csv(os.path.join(dir_path, file), encoding=encoding, sep=separator, skiprows=1)])
     except UnicodeDecodeError as e:
-        print(f"Could not decode csv file. Try to pass 'utf-8' or 'latin1'. Also, check the encoding of the files.")
+        print(f"Error:Could not decode csv file.\nTry to pass 'utf-8' or 'latin1'. Also, check the encoding of the files.")
         print(e)
         sys.exit(1)
     except pd.errors.ParserError as e:
-        print(f"Could not parse csv file. Check the separator.")
+        print(f"Error: Could not parse csv file.\nCheck the separator.")
         print(e)
+        sys.exit(1)
+    except AssertionError as e:
+        print("Error: ", e)
         sys.exit(1)
     except Exception as e:
         print(f"An error occurred: {e}")
         sys.exit(1)
+    
     return data
 
 
@@ -60,11 +83,17 @@ def format_data(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 def main():
-    data = read_data('./data/raw', encoding='latin1', separator=';')
+    # Parse arguments
+    args = parse_args()
+
+    # Read and format data
+    data = read_data(args.dir_path, encoding=args.encoding, separator=args.separator)
     data = format_data(data)
     print(data.info())
-
     # print(data[['ANO', 'MES', 'DATA']].sort_values(by='DATA', ascending=False).head(10))
+
+    # Save data
+    data.to_csv(args.output, index=False)
 
 
 if __name__ == '__main__':

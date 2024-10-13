@@ -1,5 +1,5 @@
 import pandas as pd
-import os, sys
+import os, sys, re
 import argparse
 
 def parse_args():
@@ -11,7 +11,7 @@ def parse_args():
     parser.add_argument('dir_path', type=str, help='Path to the directory with the data.')
     parser.add_argument('-enc', '--encoding', type=str, default='latin1', help='Encoding of the files.')
     parser.add_argument('-sep', '--separator', type=str, default=';', help='Separator of the files.')
-    parser.add_argument('-out', '--output', type=str, default='data.csv', help='Output file.')
+    parser.add_argument('-out', '--output', type=str, default='./data/data.csv', help='Output file.')
     return parser.parse_args()
 
 
@@ -58,27 +58,59 @@ def format_data(data: pd.DataFrame) -> pd.DataFrame:
     :param data: DataFrame
     :return: DataFrame
     """
-    # Format columns data types
-    data['ANO'] = pd.to_numeric(data['ANO'], errors='coerce')
-    data['MES'] = pd.to_numeric(data['MES'], errors='coerce')
-    data['SENADOR'] = data['SENADOR'].astype(str)
-    data['TIPO_DESPESA'] = data['TIPO_DESPESA'].astype(str)
-    data['CNPJ_CPF'] = data['CNPJ_CPF'].astype(str)
-    data['FORNECEDOR'] = data['FORNECEDOR'].astype(str)
-    data['DOCUMENTO'] = data['DOCUMENTO'].astype(str)
-    data['DATA'] = pd.to_datetime(data['DATA'], format='%d/%m/%Y', errors='coerce')
-    data['DETALHAMENTO'] = data['DETALHAMENTO'].astype(str)
-    data['VALOR_REEMBOLSADO'] = pd.to_numeric(data['VALOR_REEMBOLSADO'].str.replace(',', '.'), errors='coerce')
-    data['COD_DOCUMENTO'] = data['COD_DOCUMENTO'].astype(str)
-
     # Drop duplicates
     print(f"Found {data.duplicated().sum()} duplicates.")
     data.drop_duplicates(inplace=True)
 
     # Drop rows if DATA doesn't match ANO
-    wrong_date = data[data['DATA'].dt.year != data['ANO']]
-    print(f"Found {wrong_date.shape[0]} rows where year doesn't match.")
-    data.drop(wrong_date.index, inplace=True)
+    # wrong_date = data[data['DATA'].dt.year != data['ANO']]
+    # print(f"Found {wrong_date.shape[0]} rows where year doesn't match.")
+    # data.drop(wrong_date.index, inplace=True)
+
+    # Replace missing values with "Não Identificado" in columns: 'CNPJ_CPF', 'FORNECEDOR', 'DOCUMENTO'
+    data = data.fillna({
+        'CNPJ_CPF': "Não Identificado",
+        'FORNECEDOR': "Não Identificado",
+        'DOCUMENTO': "Não identificado"
+    })
+
+    # Change column type to string for columns: 'SENADOR', 'TIPO_DESPESA' and 5 other columns
+    data = data.astype({
+        'SENADOR': 'string',
+        'TIPO_DESPESA': 'string',
+        'CNPJ_CPF': 'string',
+        'FORNECEDOR': 'string',
+        'DOCUMENTO': 'string',
+        'DETALHAMENTO': 'string',
+        'COD_DOCUMENTO': 'string'
+    })
+
+    # Replace missing values with "Sem detalhamento" in column: 'DETALHAMENTO'
+    data = data.fillna({'DETALHAMENTO': "Sem detalhamento"})
+
+    # Change column type to float64 for column: 'VALOR_REEMBOLSADO'
+    data['VALOR_REEMBOLSADO'] = data['VALOR_REEMBOLSADO'].str.replace(",", ".", case=False, regex=False)
+    data['VALOR_REEMBOLSADO'] = data['VALOR_REEMBOLSADO'].str.replace("[^0-9.]", "", case=False, regex=True)
+    data = data.astype({'VALOR_REEMBOLSADO': 'float64'})
+
+    # Filter rows based on column: 'DATA'
+    # Define the regex pattern for the date format "dd/mm/YYYY"
+    pattern = r'\b(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}\b'
+    data['DATA'] = data['DATA'].apply(lambda x: x if re.match(pattern, str(x)) else None)
+    data['DATA'] = pd.to_datetime(data['DATA'], format='%d/%m/%Y',dayfirst=True, errors='coerce')
+
+    return data
+
+
+def ceaps_data_wrangling(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Perform data wrangling on the CEAPS dataset.
+    :param df: DataFrame
+    :return: DataFrame
+    """
+    data = format_data(df)
+    print(data.info())
+    # print(data[['ANO', 'MES', 'DATA']].sort_values(by='DATA', ascending=False).head(10))
 
     return data
 
@@ -88,9 +120,9 @@ def main():
 
     # Read and format data
     data = read_data(args.dir_path, encoding=args.encoding, separator=args.separator)
-    data = format_data(data)
-    print(data.info())
-    # print(data[['ANO', 'MES', 'DATA']].sort_values(by='DATA', ascending=False).head(10))
+    
+    # Perform data wrangling
+    data = ceaps_data_wrangling(data)
 
     # Save data
     data.to_csv(args.output, index=False)

@@ -1,3 +1,4 @@
+import chardet
 import pandas as pd
 import os
 import sys
@@ -15,7 +16,7 @@ def create_parser() -> argparse.ArgumentParser:
         "dir_path", type=str, help="Path to the directory with the data."
     )
     parser.add_argument(
-        "-enc", "--encoding", type=str, default="latin1", help="Encoding of the files."
+        "-enc", "--encoding", type=str, default="auto", help="Encoding of the files."
     )
     parser.add_argument(
         "-sep", "--separator", type=str, default=";", help="Separator of the files."
@@ -26,7 +27,18 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def read_data(dir_path, encoding: str = "latin1", separator: str = ";") -> pd.DataFrame:
+def detect_encoding(file_path):
+    """
+    Detect the encoding of a file.
+    :param file_path: str
+    :return: str
+    """
+    with open(file_path, "rb") as f:
+        result = chardet.detect(f.read())
+    return result["encoding"]
+
+
+def read_data(dir_path, encoding: str = "auto", separator: str = ";") -> pd.DataFrame:
     """
     Read data from a directory and return the dataframe.
     :param dir_path: str
@@ -38,18 +50,26 @@ def read_data(dir_path, encoding: str = "latin1", separator: str = ";") -> pd.Da
 
         # Check if there are csv files in the directory and list them
         file_list = os.listdir(dir_path)
-        file_list = [file for file in file_list if file.endswith(".csv")]
+        file_list = [
+            os.path.join(dir_path, file) for file in file_list if file.endswith(".csv")
+        ]
         assert len(file_list) > 0, f"No csv files found in {dir_path}."
 
         # Read the csv files
         data = pd.DataFrame()
         for file in file_list:
+            if encoding == "auto":
+                enc = detect_encoding(file)
+                print(f"Reading file: {file} with encoding: {enc}")
+            else:
+                enc = encoding
+
             data = pd.concat(
                 [
                     data,
                     pd.read_csv(
-                        os.path.join(dir_path, file),
-                        encoding=encoding,
+                        file,
+                        encoding=enc,
                         sep=separator,
                         skiprows=1,
                     ),
@@ -57,7 +77,7 @@ def read_data(dir_path, encoding: str = "latin1", separator: str = ";") -> pd.Da
             )
     except UnicodeDecodeError as e:
         print(
-            "Error:Could not decode csv file.\nTry to pass 'utf-8' or 'latin1'. Also, check the encoding of the files."
+            "Error:Could not decode csv file.\n. Check the encoding of the files or set the argument to 'auto'."
         )
         print(e)
         sys.exit(1)
@@ -90,15 +110,6 @@ def format_data(data: pd.DataFrame) -> pd.DataFrame:
     # print(f"Found {wrong_date.shape[0]} rows where year doesn't match.")
     # data.drop(wrong_date.index, inplace=True)
 
-    # Replace missing values with "Não Identificado" in columns: 'CNPJ_CPF', 'FORNECEDOR', 'DOCUMENTO'
-    data = data.fillna(
-        {
-            "CNPJ_CPF": "Não Identificado",
-            "FORNECEDOR": "Não Identificado",
-            "DOCUMENTO": "Não identificado",
-        }
-    )
-
     # Change column type to string for columns: 'SENADOR', 'TIPO_DESPESA' and 5 other columns
     data = data.astype(
         {
@@ -109,6 +120,15 @@ def format_data(data: pd.DataFrame) -> pd.DataFrame:
             "DOCUMENTO": "string",
             "DETALHAMENTO": "string",
             "COD_DOCUMENTO": "string",
+        }
+    )
+
+    # Replace missing values with "Não Identificado" in columns: 'CNPJ_CPF', 'FORNECEDOR', 'DOCUMENTO'
+    data = data.fillna(
+        {
+            "CNPJ_CPF": "Não Identificado",
+            "FORNECEDOR": "Não Identificado",
+            "DOCUMENTO": "Não identificado",
         }
     )
 
@@ -144,8 +164,6 @@ def ceaps_data_wrangling(df: pd.DataFrame) -> pd.DataFrame:
     :return: DataFrame
     """
     data = format_data(df)
-    print(data.info())
-    # print(data[['ANO', 'MES', 'DATA']].sort_values(by='DATA', ascending=False).head(10))
 
     return data
 
@@ -156,12 +174,15 @@ def main():
     args = parser.parse_args()
 
     # Read and format data
+    print("Reading data...")
     data = read_data(args.dir_path, encoding=args.encoding, separator=args.separator)
 
     # Perform data wrangling
+    print("Performing data wrangling...")
     data = ceaps_data_wrangling(data)
 
     # Save data
+    print(f"Saving data to {args.output}...")
     data.to_csv(args.output, index=False, encoding="utf-8")
 
 

@@ -17,16 +17,24 @@ def create_parser() -> argparse.ArgumentParser:
         "--dir_path",
         default="./data/raw",
         type=str,
-        help="Path to the directory with the raw data."
+        help="Path to the directory with the raw data.",
     )
     parser.add_argument(
-        "-enc", "--encoding", type=str, default="Windows-1258", help="Encoding of the files."
+        "-enc",
+        "--encoding",
+        type=str,
+        default="Windows-1258",
+        help="Encoding of the files.",
     )
     parser.add_argument(
         "-sep", "--separator", type=str, default=";", help="Separator of the files."
     )
     parser.add_argument(
-        "-out", "--output", type=str, default="./data/interim/data.csv", help="Output file."
+        "-out",
+        "--output",
+        type=str,
+        default="./data/interim/data.csv",
+        help="Output file.",
     )
     return parser
 

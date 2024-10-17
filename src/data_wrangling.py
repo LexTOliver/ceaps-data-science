@@ -13,16 +13,20 @@ def create_parser() -> argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(description="Data Wrangling")
     parser.add_argument(
-        "dir_path", type=str, help="Path to the directory with the data."
+        "-dir",
+        "--dir_path",
+        default="./data/raw",
+        type=str,
+        help="Path to the directory with the raw data."
     )
     parser.add_argument(
-        "-enc", "--encoding", type=str, default="auto", help="Encoding of the files."
+        "-enc", "--encoding", type=str, default="Windows-1258", help="Encoding of the files."
     )
     parser.add_argument(
         "-sep", "--separator", type=str, default=";", help="Separator of the files."
     )
     parser.add_argument(
-        "-out", "--output", type=str, default="./data/data.csv", help="Output file."
+        "-out", "--output", type=str, default="./data/interim/data.csv", help="Output file."
     )
     return parser
 
@@ -77,19 +81,19 @@ def read_data(dir_path, encoding: str = "auto", separator: str = ";") -> pd.Data
             )
     except UnicodeDecodeError as e:
         print(
-            "Error:Could not decode csv file.\n. Check the encoding of the files or set the argument to 'auto'."
+            "ERROR: Could not decode csv file.\nCheck the encoding of the files or set the argument to 'auto'."
         )
-        print(e)
+        print("Exception:", e)
         sys.exit(1)
     except pd.errors.ParserError as e:
-        print("Error: Could not parse csv file.\nCheck the separator.")
-        print(e)
+        print("ERROR: Could not parse csv file.\nCheck the separator.")
+        print("Exception:", e)
         sys.exit(1)
     except AssertionError as e:
-        print("Error: ", e)
+        print("ERROR:", e)
         sys.exit(1)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred!\nException: {e}")
         sys.exit(1)
 
     return data
@@ -102,7 +106,6 @@ def format_data(data: pd.DataFrame) -> pd.DataFrame:
     :return: DataFrame
     """
     # Drop duplicates
-    print(f"Found {data.duplicated().sum()} duplicates.")
     data.drop_duplicates(inplace=True)
 
     # Drop rows if DATA doesn't match ANO
@@ -174,7 +177,9 @@ def main():
     args = parser.parse_args()
 
     # Read and format data
-    print("Reading data...")
+    print(f"Reading data from directory {args.dir_path}...")
+    print(f"Encoding: {args.encoding}")
+    print(f"Separator: {args.separator}")
     data = read_data(args.dir_path, encoding=args.encoding, separator=args.separator)
 
     # Perform data wrangling

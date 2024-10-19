@@ -6,7 +6,10 @@ import re
 import argparse
 
 
-def create_parser() -> argparse.ArgumentParser:
+__all__ = ["ceaps_data_wrangling", "read_data", "format_data"]
+
+
+def _create_parser() -> argparse.ArgumentParser:
     """
     Parse the arguments.
     :return: argparse.Namespace
@@ -39,7 +42,7 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def detect_encoding(file_path):
+def _detect_encoding(file_path: str) -> str:
     """
     Detect the encoding of a file.
     :param file_path: str
@@ -50,10 +53,12 @@ def detect_encoding(file_path):
     return result["encoding"]
 
 
-def read_data(dir_path, encoding: str = "auto", separator: str = ";") -> pd.DataFrame:
+def read_data(dir_path: str, encoding: str = "auto", separator: str = ";") -> pd.DataFrame:
     """
     Read data from a directory and return the dataframe.
     :param dir_path: str
+    :param encoding: str
+    :param separator: str
     :return: DataFrame
     """
     try:
@@ -71,7 +76,7 @@ def read_data(dir_path, encoding: str = "auto", separator: str = ";") -> pd.Data
         data = pd.DataFrame()
         for file in file_list:
             if encoding == "auto":
-                enc = detect_encoding(file)
+                enc = _detect_encoding(file)
                 print(f"Reading file: {file} with encoding: {enc}")
             else:
                 enc = encoding
@@ -179,9 +184,9 @@ def ceaps_data_wrangling(df: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def main():
+def _main():
     # Parse arguments
-    parser = create_parser()
+    parser = _create_parser()
     args = parser.parse_args()
 
     # Read and format data
@@ -200,4 +205,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    _main()

@@ -61,6 +61,7 @@ def read_data(dir_path: str, encoding: str = "auto", separator: str = ";") -> pd
     :param separator: str
     :return: DataFrame
     """
+    # TODO: Add support for reading from a URL link
     try:
         # Check if the directory exists and if there are csv files
         assert os.path.exists(dir_path), f"Directory {dir_path} not found."

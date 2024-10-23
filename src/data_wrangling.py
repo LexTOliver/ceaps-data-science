@@ -1,7 +1,7 @@
 import pandas as pd
 import re
 import argparse
-from utils.data_manipulation import read_data_from_dir as read_data
+from src.utils.data_reading import read_data_from_dir as read_data
 
 
 __all__ = ["ceaps_data_wrangling", "format_data"]

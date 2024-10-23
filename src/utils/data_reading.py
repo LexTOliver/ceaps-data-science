@@ -100,7 +100,7 @@ def read_data(
         else:
             enc = encoding
 
-        data = pd.read_csv(file_path, encoding=enc, sep=separator, skiprows=1)
+        data = pd.read_csv(file_path, encoding=enc, sep=separator)
     except UnicodeDecodeError as e:
         print(
             "ERROR: Could not decode csv file.\nCheck the encoding of the files or set the argument to 'auto'."

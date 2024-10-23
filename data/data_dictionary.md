@@ -17,7 +17,7 @@ CEAPS (Cota para Exercício da Atividade Parlamentar dos Senadores) is a dataset
 
 The `data.csv` file contains the aggregation of all data between 2008 and 2022, including which senator made that expense, how much it was, when it was made, the details, the type of the expense, the supplier, and some documentation of the expense.
 
-The dataset is structured in a comma-separated values (CSV) format. It was originally encoded as `LATIN1` and then transformed to `UTF-8`. The original delimiter was a semicolon, but after the transformations, it is now separated by a comma. The dataset transformations also include removing rows where the year of the expense does not match the year of registration.
+The dataset is structured in a comma-separated values (CSV) format. It was originally encoded as `Windows-1258` and then transformed to `UTF-8`. The original delimiter was a semicolon, but after the transformations, it is now separated by a comma. The dataset transformations also include removing rows where the year of the expense does not match the year of registration.
 
 ## Data Fields <a name="data-fields"></a>
 

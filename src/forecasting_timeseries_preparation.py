@@ -41,16 +41,17 @@ def _create_argparse() -> argparse.ArgumentParser:
 
 def forecasting_timeseries_preparation(data: pd.DataFrame) -> pd.DataFrame:
     """
-    Group data by 'DATA' column and sum the values by 'VALOR_REEMBOLSADO'.
+    Group data by 'DATA' column, sum and count the values by 'VALOR_REEMBOLSADO'.
     :param data: DataFrame
     :return: DataFrame
     """
-
     data['DATA'] = pd.to_datetime(data['DATA'])
-    data = data.groupby('DATA').sum().reset_index()
 
-    data = data[['DATA', 'VALOR_REEMBOLSADO']]
+    # Group data by 'DATA' column, sum and count the values by 'VALOR_REEMBOLSADO'
+    data = data.groupby('DATA')['VALOR_REEMBOLSADO'].agg(['sum', 'count']).reset_index()
+    data.columns = ['DATA', 'VALOR_REEMBOLSADO', 'COUNT']
 
+    data = data.sort_values('DATA')
     return data
 
 

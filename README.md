@@ -34,7 +34,10 @@ To get started, follow these steps:
 4. Run the cells in the notebooks to perform data analysis and train machine learning models.
 5. Visualize the results in `results/` directory.
 
-Obs.: You might have some difficulties with the enconding of the data files. The encoding that best matches for me was `Windows-1258`. You can set it when running the data wrangling script with `--enconding Windows-1258` or you can set it to `auto` and try to identify the best one.
+### Observations
+You might have some difficulties with the enconding of the data files. The encoding that best matches for me was `Windows-1258`. You can set it when running the data wrangling script with `--enconding Windows-1258` or you can set it to `auto` and try to identify the best one.
+
+Moreover, there are some date records that do not match the year. Since these cases correspond to less than 1% of the rows, it was decided to remove them to maintain the feasibility of the dates.
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.

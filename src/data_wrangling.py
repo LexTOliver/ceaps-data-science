@@ -1,7 +1,7 @@
 import pandas as pd
 import re
 import argparse
-from src.utils.data_reading import read_data_from_dir as read_data
+from utils.data_reading import read_data_from_dir as read_data
 
 
 __all__ = ["ceaps_data_wrangling", "format_data"]
@@ -49,11 +49,6 @@ def format_data(data: pd.DataFrame) -> pd.DataFrame:
     # Drop duplicates
     data.drop_duplicates(inplace=True)
 
-    # Drop rows if DATA doesn't match ANO
-    # wrong_date = data[data['DATA'].dt.year != data['ANO']]
-    # print(f"Found {wrong_date.shape[0]} rows where year doesn't match.")
-    # data.drop(wrong_date.index, inplace=True)
-
     # Change column type to string for columns: 'SENADOR', 'TIPO_DESPESA' and 5 other columns
     data = data.astype(
         {
@@ -97,6 +92,16 @@ def format_data(data: pd.DataFrame) -> pd.DataFrame:
     data["DATA"] = pd.to_datetime(
         data["DATA"], format="%d/%m/%Y", dayfirst=True, errors="coerce"
     )
+
+     # Drop rows if DATA doesn't match ANO
+    wrong_date = data[data['DATA'].dt.year != data['ANO']]
+    print(f"Found {wrong_date.shape[0]} rows where year doesn't match.")
+    data.drop(wrong_date.index, inplace=True)
+
+    # Drop rows if DATA is less than 2008
+    # wrong_date = data[data['DATA'].dt.year < 2008]
+    # print(f"Found {wrong_date.shape[0]} rows where year is less than 2008.")
+    # data.drop(wrong_date.index, inplace=True)
 
     return data
 

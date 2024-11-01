@@ -93,8 +93,8 @@ def format_data(data: pd.DataFrame) -> pd.DataFrame:
         data["DATA"], format="%d/%m/%Y", dayfirst=True, errors="coerce"
     )
 
-     # Drop rows if DATA doesn't match ANO
-    wrong_date = data[data['DATA'].dt.year != data['ANO']]
+    # Drop rows if DATA doesn't match ANO
+    wrong_date = data[data["DATA"].dt.year != data["ANO"]]
     print(f"Found {wrong_date.shape[0]} rows where year doesn't match.")
     data.drop(wrong_date.index, inplace=True)
 

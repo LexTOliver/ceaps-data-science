@@ -66,21 +66,24 @@ def _apply_stationarity_transformations(data: pd.DataFrame) -> pd.DataFrame:
     :param data: Dataframe with the timeseries
     :return new_data: Dataframe updated
     """
+
     if is_stationary(data["VALOR_REEMBOLSADO"]):
-        print('The original timeseries is stationary.')
+        print("The original timeseries is stationary.")
         return data
     else:
         print(
             "The original data is not stationary, applying first differencing and log transformation."
         )
-        # Apply differencing with the period equals to one
-        data["VALOR_REEMBOLSADO_stationary"] = data["VALOR_REEMBOLSADO"].diff(periods=1)
+        # Apply differencing with the period equals to one (first order differencing)
+        data["VALOR_REEMBOLSADO"] = data["VALOR_REEMBOLSADO"].diff(periods=1)
 
         # Apply log transformation
-        data["VALOR_REEMBOLSADO_stationary"] = np.log(data["VALOR_REEMBOLSADO"])
+        data["VALOR_REEMBOLSADO"] = np.log(data["VALOR_REEMBOLSADO"])
 
-        if is_stationary(data["VALOR_REEMBOLSADO_stationary"]):
-            print("The original timeseries needed to be transformed and it is saved in 'stationary' column.")
+        if is_stationary(data["VALOR_REEMBOLSADO"]):
+            print(
+                "The original timeseries needed to be transformed and it is saved in 'stationary' column."
+            )
             return data
         else:
             print(
@@ -105,6 +108,8 @@ def forecasting_timeseries_preparation(data: pd.DataFrame) -> pd.DataFrame:
     data = _apply_stationarity_transformations(data)
 
     data = data.sort_values("DATA")
+
+    data.rename(columns={"DATA": "X", "VALOR_REEMBOLSADO": "y"}, inplace=True)
     return data
 
 

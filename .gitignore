@@ -1,6 +1,13 @@
 ### Data CEAPS ###
 *.csv
 
+# Trained models
+models/*
+!models/.gitkeep
+
+# NeuralProphet logs
+lightning_logs/
+
 
 ### JupyterNotebooks ###
 
